@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<Person> call, Throwable t) {
                 showError(t.getMessage());
+                call.cancel();
             }
         });
     }
