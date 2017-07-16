@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">About someone</string>
+    <string name="msg_full_name">ФИО :</string>
+    <string name="msg_birthday">Дата :</string>
+    <string name="msg_description">Описание :</string>
+    <string name="button_update">Обновить</string>
+</resources>
