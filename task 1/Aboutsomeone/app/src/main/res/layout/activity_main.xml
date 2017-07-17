@@ -33,13 +33,13 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="23dp"
+        android:layout_marginBottom="13dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:onClick="onClick"
         android:text="@string/button_update"
         android:layout_alignParentBottom="true"
-        android:layout_toEndOf="@+id/text_date" />
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:id="@+id/text_full_name"
