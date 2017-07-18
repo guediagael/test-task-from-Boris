@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                     tvName.setText(respbody.getFullName());
                     tvBirthday.setText(respbody.getDate());
                     tvDesc.setText(respbody.getDescription());
-                }
+                }else showError("Нажмите ещё раз");
             }
 
             @Override
