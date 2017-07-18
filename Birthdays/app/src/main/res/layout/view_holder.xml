@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <TextView
+    <Chronometer
         android:id="@+id/text_chrono"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -13,6 +13,12 @@
 
     <TextView
         android:id="@+id/text_person_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="TextView" />
+
+    <TextView
+        android:id="@+id/text_countdown"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="TextView" />

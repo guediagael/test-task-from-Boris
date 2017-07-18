@@ -3,13 +3,14 @@ package training.android.ui.birthdays.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by guedi on 7/16/2017.
  */
 
-public class Birthdays {
+public class Birthdays implements Serializable {
 
     @SerializedName("past")
     @Expose

@@ -27,46 +27,54 @@ import training.android.ui.birthdays.models.PastBirthdays;
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
 
-    private HashMap<String,Long> mFutureBirthdays, mPastBirthdays;
+//    private HashMap<String,Long> mFutureBirthdays, mPastBirthdays;
     private PlaceholderFragment[] fragments;
 
-    public SectionsPagerAdapter(FragmentManager fm,Birthdays birthdays) {
+    public SectionsPagerAdapter(FragmentManager fm) {
         super(fm);
 
         fragments= new PlaceholderFragment[]{null,null};
-        mPastBirthdays = new HashMap<>();
-        mFutureBirthdays = new HashMap<>();
-        extractBirthdays(birthdays);
     }
 
     public void dataRefreshed(Birthdays birthdays){
-        Map<String,Long> past = new HashMap<>();
+        HashMap<String,Long> past = new HashMap<>();
         for(PastBirthdays pbd : birthdays.getPast()){
             past.put(pbd.getDescription(),pbd.getTime());
         }
-        fragments[0].setBirthdays(past);
+        ( (PlaceholderFragment)getItem(0)).setBirthdays(past);
 
-        Map<String,Long> future = new HashMap<>();
+
+
+        HashMap<String,Long> future = new HashMap<>();
         for(FutureBirthdays fbd : birthdays.getFuture()){
             future.put(fbd.getDescription(),fbd.getTime());
         }
-        fragments[1].setBirthdays(future);
 
+        ( (PlaceholderFragment)getItem(1)).setBirthdays(future);
 
 
     }
 
     public void stopLoading(){
-        fragments[0].cancelRefresh();
-        fragments[1].cancelRefresh();
+        try{
+            fragments[0].cancelRefresh();
+            fragments[1].cancelRefresh();
+        }catch (NullPointerException e){
+            Log.d(getClass().getSimpleName(),e.getMessage());
+        }
+
     }
+
 
 
     @Override
     public Fragment getItem(int position) {
-        HashMap<String,Long> birthdays= position==0 ? mPastBirthdays:mFutureBirthdays;
         if (fragments[position]==null){
-            fragments[position] = PlaceholderFragment.newInstance(position + 1,birthdays);
+            if (position==0){
+                fragments[position] = PlaceholderFragment.newInstance(position + 1,new HashMap<String, Long>(),false);
+            }else
+                fragments[position] = PlaceholderFragment.newInstance(position + 1,new HashMap<String, Long>(),true);
+
             return  fragments[position];
         }else
             return fragments[position];
@@ -92,36 +100,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         }
         return null;
     }
-
-
-
-    private void extractBirthdays(Birthdays birthdays){
-        List<FutureBirthdays> futureBirthdaysList = birthdays.getFuture();
-        List<PastBirthdays> pastBirthdaysList = birthdays.getPast();
-        try {
-            for (PastBirthdays pbd : pastBirthdaysList){
-                String key = pbd.getDescription();
-                Long time = pbd.getTime();
-                mPastBirthdays.put(key,time);
-            }
-
-
-            getItem(0);
-
-            for (FutureBirthdays fbd : futureBirthdaysList){
-                String key = fbd.getDescription();
-                Long time =fbd.getTime();
-                mFutureBirthdays.put(key,time);
-            }
-
-            getItem(1);
-        }catch (NullPointerException e){
-            Log.d(getClass().getSimpleName(),e.getMessage());
-        }
-
-    }
-
-
 
 
 }

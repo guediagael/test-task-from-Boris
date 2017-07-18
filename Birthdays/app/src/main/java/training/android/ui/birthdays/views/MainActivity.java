@@ -40,7 +40,9 @@ public class MainActivity extends AppCompatActivity implements MainView,
 
     private Controller mController;
 
-    private Birthdays mBirthdays = new Birthdays();
+    private static final String SAVED_BIRTHDAYS = "birthday";
+
+    private Birthdays mBirthdays;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,18 +60,35 @@ public class MainActivity extends AppCompatActivity implements MainView,
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(),mBirthdays);
+//        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(),mBirthdays);
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
         mController = new Controller(this);
-        mController.loadData();
+        if (savedInstanceState==null) mController.loadData();
 
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putSerializable(SAVED_BIRTHDAYS,mBirthdays);
 
+
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mBirthdays = (Birthdays)savedInstanceState.getSerializable(SAVED_BIRTHDAYS);
+        if (mBirthdays==null) mController.loadData();
+//        else mSectionsPagerAdapter.dataRefreshed(mBirthdays);
+    }
 
     @Override
     public void birthdaysLoaded(Birthdays birthdays) {
+        mBirthdays =null;
+        mBirthdays=birthdays;
         mSectionsPagerAdapter.dataRefreshed(birthdays);
     }
 
