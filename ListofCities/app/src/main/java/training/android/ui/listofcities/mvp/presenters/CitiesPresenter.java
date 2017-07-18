@@ -4,6 +4,8 @@ import android.content.Context;
 import android.database.sqlite.SQLiteConstraintException;
 import android.util.Log;
 
+import org.greenrobot.greendao.query.QueryBuilder;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,8 @@ public class CitiesPresenter implements Presenter {
 
     private CitiesView mView;
     private ApiClient mApi;
-    private int page=1;
+    private volatile int page;
+    private volatile short numberOfTry = 0;
     private CityDao cityDao;
 
     public CitiesPresenter(CitiesView view, Context context) {
@@ -36,6 +39,8 @@ public class CitiesPresenter implements Presenter {
         mApi = RetrofitService.getInstance().create(ApiClient.class);
         DaoSession daoSession =((App) ((MainActivity) context).getApplication()).getDaoSession();
         cityDao = daoSession.getCityDao();
+        page = getLatestSavedPage();
+
     }
 
     @Override
@@ -66,7 +71,16 @@ public class CitiesPresenter implements Presenter {
             @Override
             public void onFailure(Call<CitiesResponse> call, Throwable t) {
                 Log.d(getClass().getSimpleName(),t.getMessage());
-                if (t.getMessage().equals("timeout")) loadList();
+                if (t.getMessage().equals("timeout")){
+                    if (numberOfTry<3) {
+                        numberOfTry++;
+                        loadList();
+                    }
+                    else {
+                        mView.onError("Проверьте свой интернет пожалуйта");
+                        call.cancel();
+                    }
+                }
                 mView.onError(t.getMessage());
                 call.cancel();
             }
@@ -75,6 +89,7 @@ public class CitiesPresenter implements Presenter {
 
     @Override
     public void updateList() {
+        page++;
         Call<CitiesResponse> call = mApi.getCities(page);
         call.enqueue(new Callback<CitiesResponse>() {
             @Override
@@ -83,34 +98,48 @@ public class CitiesPresenter implements Presenter {
                 if (response.body()!=null){
                     CitiesResponse respBody = response.body();
                     if (respBody.getError()==0){
-                        List<String> cites = new ArrayList<String>();
+                        List<String> cites = new ArrayList<>();
                         cites.addAll(respBody.getCities());
                         for (String city : cites){
                             City c = new City();
                             c.setName(city);
+                            c.setPageNumber(respBody.getPage());
                             try {
                                 cityDao.insert(c);
                             }catch (SQLiteConstraintException e){
                                 Log.d(getClass().getSimpleName(),e.getMessage());
                             }
                         }
-                        if (respBody.getPage()<57)
-                            mView.listUpdated(cites,false);
-                        else
-                            mView.listUpdated(cites,true);
+                       mView.listUpdated(cites);
 
+                    }else {
+                        page--;
+                        mView.onError("Вы скачали все элеметы");
                     }
-                }else mView.onError("Пройзошла ощибка");
+                }else{
+                    page--;
+                    mView.onError("Пройзошла ощибка");
+                }
             }
 
             @Override
             public void onFailure(Call<CitiesResponse> call, Throwable t) {
-                updateList();
+                page--;
+                if (t.getMessage().equals("timeout")){
+                    if (numberOfTry<3) {
+                        numberOfTry++;
+                        loadList();
+                    }
+                    else {
+                        mView.onError("Проверьте свой интернет пожалуйта");
+                        call.cancel();
+                    }
+                }
                 mView.onError(t.getMessage());
                 call.cancel();
+
             }
         });
-        if (page<58)  page++;
     }
 
     @Override
@@ -118,5 +147,16 @@ public class CitiesPresenter implements Presenter {
         List<String> cities = new ArrayList<>();
         for (City city :cityDao.loadAll()) cities.add(city.getName());
         mView.listLoaded(cities);
+    }
+
+    private int getLatestSavedPage(){
+        QueryBuilder<City> qb = cityDao.queryBuilder();
+        qb.orderDesc(CityDao.Properties.PageNumber).limit(1);
+        try{
+            return  qb.list().get(0).getPageNumber();
+        }catch (IndexOutOfBoundsException e){
+            Log.d(getClass().getSimpleName(),e.getMessage());
+        }
+        return 0;
     }
 }

@@ -20,15 +20,28 @@ public class City {
     @Index(unique = true)
     private String name;
 
-    @Generated(hash = 1097063181)
-    public City(Long id, @NotNull String name) {
+
+    @NotNull
+    private int pageNumber;
+
+
+
+
+
+    @Generated(hash = 1472107321)
+    public City(Long id, @NotNull String name, int pageNumber) {
         this.id = id;
         this.name = name;
+        this.pageNumber = pageNumber;
     }
 
     @Generated(hash = 750791287)
     public City() {
     }
+
+
+
+
 
     public Long getId() {
         return this.id;
@@ -44,5 +57,13 @@ public class City {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getPageNumber() {
+        return pageNumber;
+    }
+
+    public void setPageNumber(int pageNumber) {
+        this.pageNumber = pageNumber;
     }
 }

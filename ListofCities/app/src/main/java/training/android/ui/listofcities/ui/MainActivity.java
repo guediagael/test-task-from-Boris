@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DividerItemDecoration;
@@ -26,10 +27,16 @@ public class MainActivity extends AppCompatActivity implements CitiesView {
 
     private Presenter mPresenter;
     private RecyclerView rvCities;
-    private List<String> mCities;
-    private SharedPreferences mSharedPreferences;
-    private final String mHasLoadedEverythingFromServer = "HasLoadedEverythingFromServer";
     private ProgressBar progressBar;
+
+    private SharedPreferences mSharedPreferences;
+    private ArrayList<String> mCities;
+
+    private final String IS_FIRST_SUCCESSFUL_LOAD = "isFirstLoad";
+    private static final String SAVED_LIST = "cities";
+    private static final String SAVED_POSITION= "listPosition";
+
+
 
 
     @Override
@@ -38,9 +45,13 @@ public class MainActivity extends AppCompatActivity implements CitiesView {
         setContentView(R.layout.activity_main);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
+
         mSharedPreferences = getPreferences(MODE_PRIVATE);
+
         mCities = new ArrayList<>();
+
         mPresenter = new CitiesPresenter(this,this);
+
         rvCities = (RecyclerView) findViewById(R.id.recycler_cities);
         rvCities.setLayoutManager(new LinearLayoutManager(this));
         rvCities.setAdapter(new MyAdapter(mCities));
@@ -52,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements CitiesView {
                 super.onScrolled(recyclerView, dx, dy);
                 LinearLayoutManager layoutManager = (LinearLayoutManager) rvCities.getLayoutManager();
                 if (layoutManager.findLastCompletelyVisibleItemPosition()==mCities.size()-1) {
-                    if (isConnected() && !isEverythingLoaded()){
+                    if (isConnected()){
                         mPresenter.updateList();
                         progressBar.setVisibility(View.VISIBLE);
 
@@ -70,15 +81,37 @@ public class MainActivity extends AppCompatActivity implements CitiesView {
         });
 
 
-        if (isConnected()){
-            progressBar.setVisibility(View.VISIBLE);
-            mPresenter.loadList();
-
-        }else {
-            progressBar.setVisibility(View.GONE);
-            onError("Нет доступ к интернету");
+        if (savedInstanceState==null){
+            fetchData();
         }
 
+
+    }
+
+
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        mCities = savedInstanceState.getStringArrayList(SAVED_LIST);
+        Parcelable adapterState = savedInstanceState.getParcelable(SAVED_POSITION);
+        rvCities.setAdapter(new MyAdapter(mCities));
+        rvCities.getLayoutManager().onRestoreInstanceState(adapterState);
+        progressBar.setVisibility(View.GONE);
+        if (mCities.isEmpty()){
+            fetchData();
+        }
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putStringArrayList(SAVED_LIST,mCities);
+        Parcelable layoutManagerState = rvCities.getLayoutManager().onSaveInstanceState();
+        outState.putParcelable(SAVED_POSITION,layoutManagerState);
+
+        super.onSaveInstanceState(outState);
 
     }
 
@@ -87,27 +120,46 @@ public class MainActivity extends AppCompatActivity implements CitiesView {
         progressBar.setVisibility(View.GONE);
         mCities.addAll(cities);
         rvCities.getAdapter().notifyDataSetChanged();
+
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.putBoolean(IS_FIRST_SUCCESSFUL_LOAD,true);
+        editor.commit();
     }
 
     @Override
-    public void listUpdated(List<String> cities, boolean isLast) {
+    protected void onDestroy() {
+        super.onDestroy();
+        mPresenter = null;
+    }
+
+    @Override
+    public void listUpdated(List<String> cities) {
         progressBar.setVisibility(View.GONE);
         int position=mCities.size();
         Log.d(getClass().getSimpleName(),"old size: "+mCities.size());
         mCities.addAll(cities);
         Log.d(getClass().getSimpleName(),"new size: "+mCities.size());
         rvCities.getAdapter().notifyItemInserted(position);
-        if (isLast){
-            SharedPreferences.Editor editor = mSharedPreferences.edit();
-            editor.putBoolean(mHasLoadedEverythingFromServer,true);
-            editor.commit();
-        }
+
     }
 
     @Override
     public void onError(String message) {
         progressBar.setVisibility(View.GONE);
         Toast.makeText(this,message,Toast.LENGTH_LONG).show();
+    }
+
+    private void fetchData(){
+        if (isConnected()){
+            progressBar.setVisibility(View.VISIBLE);
+            if (!mSharedPreferences.getBoolean(IS_FIRST_SUCCESSFUL_LOAD,false))
+                mPresenter.loadList();
+            else mPresenter.loadFromDb();
+
+        }else {
+            progressBar.setVisibility(View.GONE);
+            onError("Нет доступ к интернету");
+        }
     }
 
     private boolean isConnected(){
@@ -122,11 +174,6 @@ public class MainActivity extends AppCompatActivity implements CitiesView {
     }
 
 
-    private boolean isEverythingLoaded(){
-
-        return  mSharedPreferences
-                .getBoolean(mHasLoadedEverythingFromServer,false);
-    }
 
 
 }

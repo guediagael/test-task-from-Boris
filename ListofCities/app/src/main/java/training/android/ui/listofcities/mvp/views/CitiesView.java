@@ -9,6 +9,6 @@ import java.util.List;
 public interface CitiesView {
 
     void listLoaded(List<String> cities);
-    void listUpdated(List<String> cities, boolean isLast);
+    void listUpdated(List<String> cities);
     void onError(String message);
 }

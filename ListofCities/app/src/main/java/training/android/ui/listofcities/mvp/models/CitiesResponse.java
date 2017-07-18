@@ -28,6 +28,7 @@ public class CitiesResponse {
     private List<String> cities;
 
 
+
     public CitiesResponse(int error, int pages, int page, List<String> cities) {
         this.error = error;
         this.pages = pages;
