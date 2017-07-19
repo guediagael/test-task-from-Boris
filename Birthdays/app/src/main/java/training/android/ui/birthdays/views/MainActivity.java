@@ -1,5 +1,6 @@
 package training.android.ui.birthdays.views;
 
+import android.os.Parcelable;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -72,8 +73,6 @@ public class MainActivity extends AppCompatActivity implements MainView,
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putSerializable(SAVED_BIRTHDAYS,mBirthdays);
-
-
         super.onSaveInstanceState(outState);
     }
 
@@ -82,14 +81,16 @@ public class MainActivity extends AppCompatActivity implements MainView,
         super.onRestoreInstanceState(savedInstanceState);
         mBirthdays = (Birthdays)savedInstanceState.getSerializable(SAVED_BIRTHDAYS);
         if (mBirthdays==null) mController.loadData();
-//        else mSectionsPagerAdapter.dataRefreshed(mBirthdays);
     }
 
     @Override
     public void birthdaysLoaded(Birthdays birthdays) {
         mBirthdays =null;
         mBirthdays=birthdays;
+        mSectionsPagerAdapter.notifyDataSetChanged();
         mSectionsPagerAdapter.dataRefreshed(birthdays);
+
+
     }
 
 
@@ -102,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements MainView,
     }
 
     @Override
-    public void refreshList(int tag) {
+    public void refreshList() {
         mController.loadData();
     }
 

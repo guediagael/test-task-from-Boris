@@ -1,13 +1,24 @@
 package training.android.ui.birthdays.views;
 
+import android.icu.util.TimeUnit;
 import android.os.CountDownTimer;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.util.TimeUtils;
 import android.view.View;
 import android.widget.Chronometer;
 import android.widget.TextView;
 
 
+import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.Hours;
+import org.joda.time.Period;
+import org.joda.time.YearMonth;
+
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import training.android.ui.birthdays.R;
 
@@ -18,33 +29,65 @@ import training.android.ui.birthdays.R;
 public class MyViewHolder extends RecyclerView.ViewHolder {
     private TextView  tvName;
     private Chronometer tvChrono;
-    private TextView tvCountdown;
+    private long birthday;
+    private DateTime given;
+    private boolean mIsFuture;
+    private Period p ;
 
     public MyViewHolder(View itemView,boolean isCountdown) {
         super(itemView);
         tvChrono = itemView.findViewById(R.id.text_chrono);
         tvName = itemView.findViewById(R.id.text_person_name);
-        tvCountdown = itemView.findViewById(R.id.text_countdown);
+        mIsFuture = isCountdown;
     }
 
-    public void setData(String name,long time ) {
-        long hour = new Date().getTime() - time;
+    public void setData(final String name, final long time ) {
+        birthday =time*1000;
+        given = new DateTime(birthday);
         tvName.setText(name);
-        tvChrono.setBase(hour);
-        tvChrono.start();
+       if (!mIsFuture){
+           tvChrono.start();
+           tvChrono.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+               @Override
+               public void onChronometerTick(Chronometer chronometer) {
+                   p =  new Period(given, new DateTime());
+                   count(p);
+
+               }
+           });
+       }else {
+           new CountDownTimer(birthday, 1000) {
+               @Override
+               public void onTick(long l) {
+//
+                   p =  new Period(new DateTime(),new DateTime(l));
+
+                   count(p);
+               }
+
+               @Override
+               public void onFinish() {
+                   tvChrono.setText("С днём рожденя!!!");
+               }
+           }.start();
+       }
 
 
-        new CountDownTimer(hour, 1000) {
-            @Override
-            public void onTick(long l) {
-                tvCountdown.setText(String.valueOf(l));
-            }
+    }
 
-            @Override
-            public void onFinish() {
 
-            }
-        }.start();
+    private void count(Period p){
+
+        String days = String.valueOf(p.getDays()+(p.getMonths()*30));
+        String hours;
+        String minutes;
+        String seconds;
+
+        if (p.getYears()>0 || p.getMonths() >3)  days = "+99";
+        hours = String.valueOf(p.getHours());
+        minutes =  String.valueOf(p.getMinutes());
+        seconds =  String.valueOf(p.getSeconds());
+        tvChrono.setText(days+":"+hours+":"+minutes+":"+seconds);
 
     }
 

@@ -59,18 +59,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyViewHolder> {
         final Long birthday = birthdays.get(personName);
 
         holder.setData(personName,birthday);
-
-
     }
-
-//    public void timeUpdated(String[] times){
-//        for (int i=0; i<times.length; i++){
-//            birthdays.put(names.get(i),times[i]);
-//        }
-//
-//        notifyDataSetChanged();
-//    }
-
 
 
 

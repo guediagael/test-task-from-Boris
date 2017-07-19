@@ -3,8 +3,10 @@ package training.android.ui.birthdays.views;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
+import android.view.ViewGroup;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,10 +26,9 @@ import training.android.ui.birthdays.models.PastBirthdays;
  * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
  * one of the sections/tabs/pages.
  */
-public class SectionsPagerAdapter extends FragmentPagerAdapter {
+public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
 
-//    private HashMap<String,Long> mFutureBirthdays, mPastBirthdays;
     private PlaceholderFragment[] fragments;
 
     public SectionsPagerAdapter(FragmentManager fm) {
@@ -41,8 +42,8 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         for(PastBirthdays pbd : birthdays.getPast()){
             past.put(pbd.getDescription(),pbd.getTime());
         }
-        ( (PlaceholderFragment)getItem(0)).setBirthdays(past);
 
+        fragments[0].setBirthdays(past);
 
 
         HashMap<String,Long> future = new HashMap<>();
@@ -50,8 +51,8 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
             future.put(fbd.getDescription(),fbd.getTime());
         }
 
-        ( (PlaceholderFragment)getItem(1)).setBirthdays(future);
 
+        fragments[1].setBirthdays(future);
 
     }
 
@@ -65,15 +66,26 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     }
 
+    @Override
+    public Object instantiateItem(ViewGroup container, int position) {
+        PlaceholderFragment fragment =(PlaceholderFragment) super.instantiateItem(container, position);
+        fragments[position] = fragment;
+        return fragment;
+    }
 
+    @Override
+    public void destroyItem(ViewGroup container, int position, Object object) {
+        fragments[position]=null;
+        super.destroyItem(container, position, object);
+    }
 
     @Override
     public Fragment getItem(int position) {
         if (fragments[position]==null){
             if (position==0){
-                fragments[position] = PlaceholderFragment.newInstance(position + 1,new HashMap<String, Long>(),false);
+                fragments[position] = PlaceholderFragment.newInstance(new HashMap<String, Long>(),false);
             }else
-                fragments[position] = PlaceholderFragment.newInstance(position + 1,new HashMap<String, Long>(),true);
+                fragments[position] = PlaceholderFragment.newInstance(new HashMap<String, Long>(),true);
 
             return  fragments[position];
         }else
