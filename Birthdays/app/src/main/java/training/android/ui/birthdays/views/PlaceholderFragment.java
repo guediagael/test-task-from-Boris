@@ -6,8 +6,8 @@ package training.android.ui.birthdays.views;
 
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -17,18 +17,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
+import java.util.Timer;
+import java.util.TimerTask;
 import training.android.ui.birthdays.R;
 
 /**
@@ -49,6 +41,17 @@ public class PlaceholderFragment extends Fragment {
 
     private HashMap<String, Long> mBirthdays;
     private boolean mIsCountdown;
+
+    private Timer  timer;
+    private TimerTask timerTask;
+    private boolean mIsFirstLoad =true;
+    private LinearLayoutManager layoutManager;
+    private MyRecyclerAdapter adapter;
+
+    final  Handler  handler = new Handler ();
+
+    private int mFirtElement;
+    private int mLastElement;
 
 
 
@@ -98,30 +101,51 @@ public class PlaceholderFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         rvBirthdays = rootView.findViewById(R.id.recycler_birthdays);
-        rvBirthdays.setLayoutManager(new LinearLayoutManager(getActivity()));
-        rvBirthdays.setAdapter(new MyRecyclerAdapter(mBirthdays,mIsCountdown));
+        layoutManager = new LinearLayoutManager(getActivity());
+        rvBirthdays.setLayoutManager(layoutManager);
+        adapter = new MyRecyclerAdapter(mBirthdays,mIsCountdown);
+        rvBirthdays.setAdapter(adapter);
         ((SwipeRefreshLayout)rootView).setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                if (timer!=null){
+                    timer.cancel();
+                    timer =null;
+                }
                 mListener.refreshList();
             }
         });
         return rootView;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        initializeTimers();
+    }
 
     public void setBirthdays(Map<String,Long> birthdays){
-        cancelRefresh();
         mBirthdays.clear();
         mBirthdays.putAll(birthdays);
         rvBirthdays.getAdapter().notifyDataSetChanged();
+        cancelRefresh();
+        initializeTimers();
+
+
+        if (mIsFirstLoad) mIsFirstLoad = false;
 
     }
+
+
 
     @Override
     public void onPause() {
         super.onPause();
         cancelRefresh();
+        if (timer!=null){
+            timer.cancel();
+            timer =null;
+        }
 
     }
 
@@ -131,6 +155,33 @@ public class PlaceholderFragment extends Fragment {
             layout.setRefreshing(false);
         } else
             Log.d(getClass().getSimpleName(),"null view ");
+    }
+
+
+    private void initializeTimers(){
+        timer = new Timer();
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                mFirtElement =layoutManager.findFirstVisibleItemPosition();
+                mLastElement = layoutManager.findLastCompletelyVisibleItemPosition();
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i=mFirtElement; i<=mLastElement; i ++){
+                            View view = rvBirthdays.getChildAt(i);
+                            try{
+                                MyViewHolder viewHolder =(MyViewHolder) rvBirthdays.getChildViewHolder(view);
+                                viewHolder.count();
+                            }catch (NullPointerException e){
+                                Log.d(getClass().getSimpleName(),e.getMessage());
+                            }
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(timerTask,3000,1000);
     }
 
 

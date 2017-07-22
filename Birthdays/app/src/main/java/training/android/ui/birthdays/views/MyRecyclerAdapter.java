@@ -50,6 +50,9 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyViewHolder> {
         return new MyViewHolder(itemView,mIsCountdown);
     }
 
+
+
+
     @Override
     public void onBindViewHolder(final MyViewHolder holder, int position) {
 

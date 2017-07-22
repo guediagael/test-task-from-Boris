@@ -42,42 +42,17 @@ public class MyViewHolder extends RecyclerView.ViewHolder {
     }
 
     public void setData(final String name, final long time ) {
-        birthday =time*1000;
+        birthday = time * 1000;
         given = new DateTime(birthday);
         tvName.setText(name);
-       if (!mIsFuture){
-           tvChrono.start();
-           tvChrono.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
-               @Override
-               public void onChronometerTick(Chronometer chronometer) {
-                   p =  new Period(given, new DateTime());
-                   count(p);
-
-               }
-           });
-       }else {
-           new CountDownTimer(birthday, 1000) {
-               @Override
-               public void onTick(long l) {
-//
-                   p =  new Period(new DateTime(),new DateTime(l));
-
-                   count(p);
-               }
-
-               @Override
-               public void onFinish() {
-                   tvChrono.setText("С днём рожденя!!!");
-               }
-           }.start();
-       }
-
-
+        count();
     }
 
 
-    private void count(Period p){
 
+    public void count(){
+        if (mIsFuture) p =  new Period(new DateTime(),new DateTime(birthday));
+        else p =  new Period(given, new DateTime());
         String days = String.valueOf(p.getDays()+(p.getMonths()*30));
         String hours;
         String minutes;
