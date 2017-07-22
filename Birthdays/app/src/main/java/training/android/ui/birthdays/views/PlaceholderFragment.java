@@ -66,7 +66,6 @@ public class PlaceholderFragment extends Fragment {
     public static PlaceholderFragment newInstance(HashMap<String,Long> birthdays, boolean isCountdown) {
         PlaceholderFragment fragment = new PlaceholderFragment();
         Bundle args = new Bundle();
-//        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         args.putSerializable(ARG_BIRTHDAYS,birthdays);
         args.putBoolean(ARG_LIST_TYPE,isCountdown);
         fragment.setArguments(args);
@@ -181,7 +180,7 @@ public class PlaceholderFragment extends Fragment {
                 });
             }
         };
-        timer.schedule(timerTask,3000,1000);
+        timer.schedule(timerTask,1000,1000);
     }
 
 
